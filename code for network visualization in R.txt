@@ -1,0 +1,120 @@
+# Install and call required libraries
+library(ggplot2) 
+library(readr) 
+library(igraph)
+
+# Read data
+stacknodes<-read.csv("C:/Users/ASUS/Downloads/stack_network_nodes.csv")
+str(stacknodes)
+stacklinks<-read.csv("C:/Users/ASUS/Downloads/stack_network_links.csv")
+str(stacklinks)
+  
+## Converting data to igraph  
+set.seed(2020)
+g1 <- graph_from_data_frame(d = stacklinks, vertices = stacknodes, directed = FALSE)
+
+## Edges
+E(g1)
+
+## Vetices
+V(g1)
+
+table(head_of(g1, E(g1)))
+V(g1)$degree<-degree(g1)
+gorder(g1) 
+
+## Plotting Networks  
+plot(g1, vertex.color=V(g1)$group, vertex.size=15,edge.arrow.size=10,edge.curved=1,
+     vertex.label.cex=0.4,vertex.label.dist=0, edge.color="blue", vertex.label.color="black")
+## Network  Layouts  
+### Kamada Kawai :  One of the popular force-directed 
+plot(g1,vertex.color=V(g1)$group,
+     vertex.label=V(g1)$name,
+     vertex.size=V(g1)$degree,
+     vertex.label.cex=0.3,
+     vertex.label.color="black",
+     edge.arrow.size=1,
+     layout=layout.kamada.kawai(g1),
+     vertex.label.cex=0.5,main="Layout with kk")
+
+### Layout - Fruchterman Reingold :one of the most used force-directed layout algorithms
+plot(g1,vertex.color=V(g1)$group,
+     vertex.label=V(g1)$name,
+     vertex.label.cex=0.5,
+     vertex.size=V(g1)$degree,
+     edge.arrow.size=0.3,
+     vertex.label.color="black",
+     layout=layout.fruchterman.reingold(g1),
+     vertex.label.cex=0.5,main="Layout with Fruchterman Reingold")
+
+### Layout Nicely  
+plot(g1,vertex.color=rainbow(52),
+     vertex.label=V(g1)$name,
+     vertex.label.cex=0.5,
+     vertex.size=V(g1)$degree,
+     edge.arrow.size=0.3,
+     layout=layout_nicely(g1),
+     vertex.label.cex=0.6,main="Layout Nicely")
+
+### Layout -reingold tilford
+plot(g1,vertex.color=rainbow(52),
+     vertex.label=V(g1)$name,
+     vertex.label.cex=0.5,
+     vertex.size=V(g1)$degree,
+     edge.arrow.size=0.5,
+     vertex.label.color="black",
+     layout=layout.reingold.tilford(g1),
+     vertex.label.cex=0.5,main="Layout with rgt")
+
+g.outd<- degree(g1, mode = c("out"))
+
+hist(g.outd, breaks = 30)
+table(g.outd)
+which.max(g.outd)
+
+## Community - Betweenness
+g.b <- betweenness(g1, directed = T)
+layout <-layout.fruchterman.reingold(g1)
+eb <- edge.betweenness.community(g1)
+membership <- cut_at(eb, no = 15)
+plot(g1,
+     vertex.color= rainbow(10, .8, .8, alpha=.8)[membership],vertex.size=15,
+     vertex.label=V(g1)$group,vertex.label.cex=0.5,layout=layout,
+     edge.arrow.size=.5)
+
+### Edge betweenness
+ceb <- cluster_edge_betweenness(g1) 
+plot(ceb, g1) 
+
+### Propagating labels
+clp <- cluster_label_prop(g1)
+plot(clp, g1)
+
+## Diameter
+par(mfrow=c(1,2))
+gr <- make_ego_graph(g1, diameter(g1), nodes = 'r', mode = c("all"))[[1]]
+dists <- distances(gr, "r")
+colors <- c("black", "red", "orange", "blue", "dodgerblue", "cyan")
+V(gr)$color <- colors[dists+1]
+plot(gr, 
+     vertex.label = dists, 
+     vertex.label.color = "white",
+     vertex.label.cex = .8,
+     edge.color = 'black',
+     vertex.size = 7,
+     edge.arrow.size = .05,
+     main = " Distances from Vetex R"
+)
+gpython <- make_ego_graph(g1, diameter(g1), nodes = 'python', mode = c("all"))[[1]]
+dists1 <- distances(gpython, "python")
+colors <- c("black", "red", "orange", "blue", "dodgerblue", "cyan")
+V(gpython)$color <- colors[dists+1]
+plot(gpython, 
+     vertex.label = dists1, 
+     vertex.label.color = "white",
+     vertex.label.cex = .8,
+     edge.color = 'black',
+     vertex.size = 7,
+     edge.arrow.size = .05,
+     main = "Distances from Vetex python"
+)
